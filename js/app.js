@@ -1,7 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Show audio instructions to users on mobile devices
     const audioPermissionMessage = document.getElementById('audio-permission');
-    if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    
+    if (isIOS || isAndroid) {
         audioPermissionMessage.style.display = 'block';
         
         // Handle the dismiss button
@@ -9,43 +12,79 @@ document.addEventListener('DOMContentLoaded', () => {
             audioPermissionMessage.style.display = 'none';
         });
         
-        // Try to initialize audio context on page interaction
-        document.body.addEventListener('click', () => {
-            // Create a short silent sound and play it to initialize audio context
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            if (AudioContext) {
-                const audioContext = new AudioContext();
-                const gainNode = audioContext.createGain();
-                gainNode.gain.value = 0; // Silent
-                gainNode.connect(audioContext.destination);
-                
-                // Create and play a short sound
-                const oscillator = audioContext.createOscillator();
-                oscillator.connect(gainNode);
-                oscillator.start();
-                oscillator.stop(0.001);
-            }
+        // Handle the enable audio button specifically for iOS
+        document.getElementById('enable-audio').addEventListener('click', () => {
+            initializeAudio();
             
-            // Try to initialize speech synthesis
-            if ('speechSynthesis' in window) {
-                // Create a short utterance and speak it silently
-                const speech = new SpeechSynthesisUtterance('');
-                speech.volume = 0;
-                window.speechSynthesis.speak(speech);
+            // Show feedback to the user
+            const enableButton = document.getElementById('enable-audio');
+            enableButton.textContent = "Audio Enabled!";
+            enableButton.style.backgroundColor = "#888888";
+            
+            // Play a silent audio to unlock audio playback on iOS
+            const silentAudio = new Audio("data:audio/mp3;base64,//uQxAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAACcQCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgAAAAA=");
+            silentAudio.play().catch(e => console.log("Silent audio catch:", e));
+            
+            // Also try to play all activity sounds to unlock them
+            for (const audioId in activitySounds) {
+                activitySounds[audioId].load();
+                setTimeout(() => {
+                    activitySounds[audioId].play()
+                        .then(() => activitySounds[audioId].pause())
+                        .catch(e => console.log(`Failed to unlock audio ${audioId}:`, e));
+                }, 100);
             }
-        }, { once: true });
+        });
     }
+    
+    // Function to initialize audio context and speech synthesis
+    function initializeAudio() {
+        // Create a short silent sound and play it to initialize audio context
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+            const audioContext = new AudioContext();
+            const gainNode = audioContext.createGain();
+            gainNode.gain.value = 0; // Silent
+            gainNode.connect(audioContext.destination);
+            
+            // Create and play a short sound
+            const oscillator = audioContext.createOscillator();
+            oscillator.connect(gainNode);
+            oscillator.start();
+            oscillator.stop(0.001);
+        }
+        
+        // Try to initialize speech synthesis
+        if ('speechSynthesis' in window) {
+            // Create a short utterance and speak it silently
+            const speech = new SpeechSynthesisUtterance('');
+            speech.volume = 0;
+            window.speechSynthesis.speak(speech);
+        }
+        
+        // Attempt to unlock audio playback on iOS
+        for (const sound in sounds) {
+            sounds[sound].load();
+            sounds[sound].play().then(() => {
+                sounds[sound].pause();
+                sounds[sound].currentTime = 0;
+            }).catch(e => console.log(`Failed to unlock ${sound}:`, e));
+        }
+    }
+    
+    // Initialize audio on first user interaction
+    document.body.addEventListener('click', initializeAudio, { once: true });
     
     // Configuration
     const segments = [
-        { color: '#FF5252', activity: 'Jump up and down 5 times!' },
-        { color: '#FFEB3B', activity: 'Turn around 3 times!' },
-        { color: '#2196F3', activity: null }, // Safe segment
-        { color: '#4CAF50', activity: 'Do your best dinosaur impression!' },
-        { color: '#9E9E9E', activity: 'Hop on one foot for 10 seconds!' }, // Gray (was purple)
-        { color: '#FFEB3B', activity: null }, // Yellow (was orange)
-        { color: '#E91E63', activity: 'Make a silly face!' },
-        { color: '#03A9F4', activity: 'Do 3 jumping jacks!' }
+        { color: '#FF5252', activity: 'Jump up and down 5 times!', audioId: 'jump' },
+        { color: '#FFEB3B', activity: 'Turn around 3 times!', audioId: 'turn' },
+        { color: '#2196F3', activity: null, audioId: 'safe' }, // Safe segment
+        { color: '#4CAF50', activity: 'Do your best dinosaur impression!', audioId: 'dinosaur' },
+        { color: '#9E9E9E', activity: 'Hop on one foot for 10 seconds!', audioId: 'hop' }, // Gray (was purple)
+        { color: '#FFEB3B', activity: null, audioId: 'safe2' }, // Yellow (was orange)
+        { color: '#E91E63', activity: 'Make a silly face!', audioId: 'face' },
+        { color: '#03A9F4', activity: 'Do 3 jumping jacks!', audioId: 'jumping' }
     ];
 
     // Check if speech synthesis is supported
@@ -106,7 +145,27 @@ document.addEventListener('DOMContentLoaded', () => {
         spinStart: new Audio('sounds/spin-start.mp3'),
         spinEnd: new Audio('sounds/spin-end.mp3'),
         spinning: new Audio('https://assets.mixkit.co/active_storage/sfx/2646/2646-preview.mp3'),
-        voiceIntro: new Audio('https://assets.mixkit.co/active_storage/sfx/1627/1627-preview.mp3')
+        voiceIntro: new Audio('https://assets.mixkit.co/active_storage/sfx/1627/1627-preview.mp3'),
+        // Activity voice clips
+        activityJump: new Audio('https://texttospeech.responsivevoice.org/v1/text:synthesize?text=Jump%20up%20and%20down%205%20times!&lang=en-US&engine=g1&rate=0.5&key=vzGmGw8J&gender=female&voice=UK+English+Female'),
+        activityTurn: new Audio('https://texttospeech.responsivevoice.org/v1/text:synthesize?text=Turn%20around%203%20times!&lang=en-US&engine=g1&rate=0.5&key=vzGmGw8J&gender=female&voice=UK+English+Female'),
+        activitySafe: new Audio('https://texttospeech.responsivevoice.org/v1/text:synthesize?text=Whew!%20You%27re%20safe%20this%20time!&lang=en-US&engine=g1&rate=0.5&key=vzGmGw8J&gender=female&voice=UK+English+Female'),
+        activityDinosaur: new Audio('https://texttospeech.responsivevoice.org/v1/text:synthesize?text=Do%20your%20best%20dinosaur%20impression!&lang=en-US&engine=g1&rate=0.5&key=vzGmGw8J&gender=female&voice=UK+English+Female'),
+        activityHop: new Audio('https://texttospeech.responsivevoice.org/v1/text:synthesize?text=Hop%20on%20one%20foot%20for%2010%20seconds!&lang=en-US&engine=g1&rate=0.5&key=vzGmGw8J&gender=female&voice=UK+English+Female'),
+        activityFace: new Audio('https://texttospeech.responsivevoice.org/v1/text:synthesize?text=Make%20a%20silly%20face!&lang=en-US&engine=g1&rate=0.5&key=vzGmGw8J&gender=female&voice=UK+English+Female'),
+        activityJumping: new Audio('https://texttospeech.responsivevoice.org/v1/text:synthesize?text=Do%203%20jumping%20jacks!&lang=en-US&engine=g1&rate=0.5&key=vzGmGw8J&gender=female&voice=UK+English+Female')
+    };
+    
+    // Map activity IDs to sound files
+    const activitySounds = {
+        'jump': sounds.activityJump,
+        'turn': sounds.activityTurn,
+        'safe': sounds.activitySafe,
+        'safe2': sounds.activitySafe,
+        'dinosaur': sounds.activityDinosaur,
+        'hop': sounds.activityHop,
+        'face': sounds.activityFace,
+        'jumping': sounds.activityJumping
     };
     
     // Preload all sounds
@@ -201,10 +260,43 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         }, 1000);
         
-        // Function to handle speech synthesis with retries
+        // Function to handle text-to-speech using either speech synthesis or pre-recorded audio
         function speakText() {
-            // Add speech synthesis with woman's voice if supported
-            if (speechSynthesisSupported) {
+            // Check if it's an iOS device
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            
+            // Use pre-recorded audio for iOS devices or when speech synthesis isn't supported
+            if (isIOS || !speechSynthesisSupported) {
+                console.log("Using pre-recorded audio for speech");
+                // Get the appropriate audio file based on the segment's audioId
+                const audioToPlay = activitySounds[selectedSegment.audioId];
+                
+                if (audioToPlay) {
+                    // Reset audio to start (in case it was played before)
+                    audioToPlay.currentTime = 0;
+                    
+                    // Play the audio file
+                    try {
+                        const playPromise = audioToPlay.play();
+                        
+                        // Modern browsers return a promise from play()
+                        if (playPromise !== undefined) {
+                            playPromise.catch(error => {
+                                console.error("Error playing audio:", error);
+                                // On iOS, audio can only play after user interaction
+                                // Show a message to the user
+                                const audioPermissionMessage = document.getElementById('audio-permission');
+                                audioPermissionMessage.style.display = 'block';
+                            });
+                        }
+                    } catch (error) {
+                        console.error("Error playing activity audio:", error);
+                    }
+                } else {
+                    console.warn("No audio file found for activity:", selectedSegment.audioId);
+                }
+            } else {
+                // Use speech synthesis for non-iOS devices that support it
                 // Determine what to say based on the segment
                 const textToSpeak = selectedSegment.activity ? 
                     selectedSegment.activity : 
@@ -260,6 +352,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     speech.onerror = function(event) {
                         console.error("Speech synthesis error:", event);
+                        
+                        // Fallback to audio files if speech synthesis fails
+                        const audioToPlay = activitySounds[selectedSegment.audioId];
+                        if (audioToPlay) {
+                            audioToPlay.currentTime = 0;
+                            audioToPlay.play().catch(e => console.error("Fallback audio failed:", e));
+                        }
                     };
                     
                     // Speak the text
@@ -275,8 +374,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Try to speak
                 trySpeak();
-            } else {
-                console.warn("Speech synthesis not supported in this browser");
             }
         }
         
