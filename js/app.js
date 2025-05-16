@@ -1,4 +1,41 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Show audio instructions to users on mobile devices
+    const audioPermissionMessage = document.getElementById('audio-permission');
+    if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        audioPermissionMessage.style.display = 'block';
+        
+        // Handle the dismiss button
+        document.getElementById('dismiss-audio-warning').addEventListener('click', () => {
+            audioPermissionMessage.style.display = 'none';
+        });
+        
+        // Try to initialize audio context on page interaction
+        document.body.addEventListener('click', () => {
+            // Create a short silent sound and play it to initialize audio context
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) {
+                const audioContext = new AudioContext();
+                const gainNode = audioContext.createGain();
+                gainNode.gain.value = 0; // Silent
+                gainNode.connect(audioContext.destination);
+                
+                // Create and play a short sound
+                const oscillator = audioContext.createOscillator();
+                oscillator.connect(gainNode);
+                oscillator.start();
+                oscillator.stop(0.001);
+            }
+            
+            // Try to initialize speech synthesis
+            if ('speechSynthesis' in window) {
+                // Create a short utterance and speak it silently
+                const speech = new SpeechSynthesisUtterance('');
+                speech.volume = 0;
+                window.speechSynthesis.speak(speech);
+            }
+        }, { once: true });
+    }
+    
     // Configuration
     const segments = [
         { color: '#FF5252', activity: 'Jump up and down 5 times!' },
@@ -16,27 +53,44 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Initialize speech synthesis voices
     let femaleVoices = [];
+    let voicesInitialized = false;
     
     if (speechSynthesisSupported) {
         function loadVoices() {
+            // Get available voices
             const voices = window.speechSynthesis.getVoices();
-            femaleVoices = voices.filter(voice => 
-                voice.name.includes('female') || 
-                voice.name.includes('woman') ||
-                voice.name.includes('girl') ||
-                voice.name.includes('Samantha') ||
-                voice.name.includes('Victoria') ||
-                voice.name.includes('Karen') ||
-                voice.name.includes('Tessa') ||
-                voice.name.includes('Moira') ||
-                voice.name.includes('Veena') ||
-                // Filter for female voice by checking for higher pitch characteristic
-                (voice.name.includes('Google') && !voice.name.includes('Male'))
-            );
-            console.log('Available female voices:', femaleVoices.map(v => v.name));
+            
+            if (voices.length > 0) {
+                voicesInitialized = true;
+                femaleVoices = voices.filter(voice => 
+                    voice.name.includes('female') || 
+                    voice.name.includes('woman') ||
+                    voice.name.includes('girl') ||
+                    voice.name.includes('Samantha') ||
+                    voice.name.includes('Victoria') ||
+                    voice.name.includes('Karen') ||
+                    voice.name.includes('Tessa') ||
+                    voice.name.includes('Moira') ||
+                    voice.name.includes('Veena') ||
+                    // Filter for female voice by checking for higher pitch characteristic
+                    (voice.name.includes('Google') && !voice.name.includes('Male'))
+                );
+                
+                console.log('Available female voices:', femaleVoices.map(v => v.name));
+                
+                // If no female voices found, use any available voice
+                if (femaleVoices.length === 0) {
+                    console.log('No female voices found, using any available voice');
+                    femaleVoices = voices;
+                }
+            } else {
+                console.warn('No voices available yet, will retry');
+                // Retry after a short delay if no voices are available
+                setTimeout(loadVoices, 100);
+            }
         }
         
-        // Initialize voices
+        // Try to initialize voices
         loadVoices();
         
         // Voices may load asynchronously, so we need this event
@@ -51,7 +105,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const sounds = {
         spinStart: new Audio('sounds/spin-start.mp3'),
         spinEnd: new Audio('sounds/spin-end.mp3'),
-        activity: new Audio('sounds/activity.mp3'),
         spinning: new Audio('https://assets.mixkit.co/active_storage/sfx/2646/2646-preview.mp3'),
         voiceIntro: new Audio('https://assets.mixkit.co/active_storage/sfx/1627/1627-preview.mp3')
     };
@@ -139,49 +192,92 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectedSegment = segments[selectedIndex % segments.length];
         
         // Start speaking while spinning
-        if (selectedSegment.activity) {
-            // Play voice intro sound after a short delay
-            setTimeout(() => {
-                sounds.voiceIntro.play();
+        setTimeout(() => {
+            sounds.voiceIntro.play();
+            
+            // Set up voice to speak after voice intro finishes
+            sounds.voiceIntro.onended = () => {
+                speakText();
+            };
+        }, 1000);
+        
+        // Function to handle speech synthesis with retries
+        function speakText() {
+            // Add speech synthesis with woman's voice if supported
+            if (speechSynthesisSupported) {
+                // Determine what to say based on the segment
+                const textToSpeak = selectedSegment.activity ? 
+                    selectedSegment.activity : 
+                    "Whew! You're safe this time!";
                 
-                // Set up voice to speak after voice intro finishes
-                sounds.voiceIntro.onended = () => {
-                    // Add speech synthesis with woman's voice if supported
-                    if (speechSynthesisSupported) {
-                        const speech = new SpeechSynthesisUtterance(selectedSegment.activity);
-                        speech.volume = 1;
-                        speech.rate = 1;
-                        speech.pitch = 1.2; // Slightly higher pitch for female voice
+                // Retry function to ensure speech works
+                function trySpeak() {
+                    // Cancel any previous speech
+                    window.speechSynthesis.cancel();
+                    
+                    // Check if voices are available
+                    if (femaleVoices.length === 0) {
+                        // Try to load voices again if they're not available
+                        const voices = window.speechSynthesis.getVoices();
+                        if (voices.length > 0) {
+                            femaleVoices = voices;
+                        } else {
+                            console.warn("No voices available for speech, retrying...");
+                            setTimeout(trySpeak, 100);
+                            return;
+                        }
+                    }
+                    
+                    const speech = new SpeechSynthesisUtterance(textToSpeak);
+                    speech.volume = 1;
+                    speech.rate = 1;
+                    speech.pitch = 1.2; // Slightly higher pitch for female voice
+                    
+                    // Select a voice
+                    if (femaleVoices.length > 0) {
+                        // Prioritize certain voices if available
+                        const preferredVoices = ['Samantha', 'Victoria', 'Karen', 'Moira', 'Veena'];
+                        let selectedVoice = null;
                         
-                        // Select a female voice
-                        if (femaleVoices.length > 0) {
-                            // Prioritize certain voices if available
-                            const preferredVoices = ['Samantha', 'Victoria', 'Karen', 'Moira', 'Veena'];
-                            let selectedVoice = null;
-                            
-                            // First try to find one of our preferred voices
-                            for (const name of preferredVoices) {
-                                const voice = femaleVoices.find(v => v.name.includes(name));
-                                if (voice) {
-                                    selectedVoice = voice;
-                                    break;
-                                }
+                        // First try to find one of our preferred voices
+                        for (const name of preferredVoices) {
+                            const voice = femaleVoices.find(v => v.name.includes(name));
+                            if (voice) {
+                                selectedVoice = voice;
+                                break;
                             }
-                            
-                            // If no preferred voice found, use the first female voice
-                            speech.voice = selectedVoice || femaleVoices[0];
-                            
-                            console.log(`Speaking with voice: ${speech.voice.name}`);
                         }
                         
-                        // Cancel any ongoing speech
-                        window.speechSynthesis.cancel();
-                        
-                        // Speak the activity
-                        window.speechSynthesis.speak(speech);
+                        // If no preferred voice found, use the first voice
+                        speech.voice = selectedVoice || femaleVoices[0];
+                        console.log(`Speaking with voice: ${speech.voice ? speech.voice.name : 'default'}`);
                     }
-                };
-            }, 1000);
+                    
+                    // Add event handlers to manage speech state
+                    speech.onend = function() {
+                        console.log("Speech finished successfully");
+                    };
+                    
+                    speech.onerror = function(event) {
+                        console.error("Speech synthesis error:", event);
+                    };
+                    
+                    // Speak the text
+                    window.speechSynthesis.speak(speech);
+                    
+                    // Chrome/Edge bug workaround: speech can cut off, so we reset it
+                    if (window.navigator.userAgent.includes("Chrome") || 
+                        window.navigator.userAgent.includes("Edge")) {
+                        window.speechSynthesis.pause();
+                        window.speechSynthesis.resume();
+                    }
+                }
+                
+                // Try to speak
+                trySpeak();
+            } else {
+                console.warn("Speech synthesis not supported in this browser");
+            }
         }
         
         // Show the result after the wheel stops spinning
@@ -199,11 +295,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 resultText = `${selectedSegment.activity} 🔥`;
             } else {
                 resultText = 'Whew! You\'re safe this time! 😅';
-                
-                // If no activity, we may still need to cancel any ongoing speech
-                if (speechSynthesisSupported) {
-                    window.speechSynthesis.cancel();
-                }
             }
             
             result.textContent = resultText;
