@@ -107,7 +107,18 @@ document.addEventListener('DOMContentLoaded', () => {
         { color: '#9E9E9E', activity: 'Hop on one foot for 10 seconds!', audioId: 'hop' }, // Gray (was purple)
         { color: '#FFEB3B', activity: null, audioId: 'safe2' }, // Yellow (was orange)
         { color: '#E91E63', activity: 'Make a silly face!', audioId: 'face' },
-        { color: '#03A9F4', activity: 'Do 3 jumping jacks!', audioId: 'jumping' }
+        { color: '#03A9F4', activity: 'Do 3 jumping jacks!', audioId: 'jumping' },
+        // New activities for kids 6-8
+        { color: '#FF9800', activity: 'Pretend you\'re a superhero flying!', audioId: 'superhero' },
+        { color: '#4CAF50', activity: 'Do a funny animal walk!', audioId: 'animal' },
+        { color: '#9C27B0', activity: 'Sing your favorite song for 10 seconds!', audioId: 'sing' },
+        { color: '#3F51B5', activity: 'Freeze like a statue for 10 seconds!', audioId: 'freeze' },
+        { color: '#2196F3', activity: null, audioId: 'safe3' }, // Another safe segment
+        { color: '#FF5722', activity: 'Dance like nobody\'s watching!', audioId: 'dance' },
+        { color: '#607D8B', activity: 'Count backwards from 10 to 1!', audioId: 'count' },
+        { color: '#8BC34A', activity: 'Touch your toes 5 times!', audioId: 'toes' },
+        { color: '#FFC107', activity: 'Blow a giant imaginary bubble!', audioId: 'bubble' },
+        { color: '#00BCD4', activity: 'Make your silliest noise!', audioId: 'noise' }
     ];
 
     // Check if speech synthesis is supported
@@ -172,13 +183,27 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Activity voice clips using direct CDN URLs that work on iOS
     const activityAudios = {
+        // Original activities
         jump: 'https://cdn.freesound.org/previews/473/473369_3288231-lq.mp3',
         turn: 'https://cdn.freesound.org/previews/399/399934_7666412-lq.mp3',
         safe: 'https://cdn.freesound.org/previews/339/339832_5121236-lq.mp3',
+        safe2: 'https://cdn.freesound.org/previews/339/339832_5121236-lq.mp3',
+        safe3: 'https://cdn.freesound.org/previews/339/339832_5121236-lq.mp3',
         dinosaur: 'https://cdn.freesound.org/previews/242/242764_4484625-lq.mp3',
         hop: 'https://cdn.freesound.org/previews/242/242756_4484625-lq.mp3',
         face: 'https://cdn.freesound.org/previews/242/242757_4484625-lq.mp3',
-        jumping: 'https://cdn.freesound.org/previews/242/242760_4484625-lq.mp3'
+        jumping: 'https://cdn.freesound.org/previews/242/242760_4484625-lq.mp3',
+        
+        // New activities
+        superhero: 'https://cdn.freesound.org/previews/242/242758_4484625-lq.mp3',
+        animal: 'https://cdn.freesound.org/previews/242/242762_4484625-lq.mp3',
+        sing: 'https://cdn.freesound.org/previews/242/242763_4484625-lq.mp3',
+        freeze: 'https://cdn.freesound.org/previews/414/414269_3567181-lq.mp3',
+        dance: 'https://cdn.freesound.org/previews/425/425550_6290669-lq.mp3',
+        count: 'https://cdn.freesound.org/previews/450/450713_6290669-lq.mp3',
+        toes: 'https://cdn.freesound.org/previews/387/387947_7215472-lq.mp3',
+        bubble: 'https://cdn.freesound.org/previews/381/381603_7215472-lq.mp3',
+        noise: 'https://cdn.freesound.org/previews/349/349818_6290669-lq.mp3'
     };
     
     // Initialize activity sounds objects
