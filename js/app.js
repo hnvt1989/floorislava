@@ -98,34 +98,211 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // Configuration with simplified colors (red, yellow, green, gray)
-    const segments = [
-        // Red segments
-        { color: '#FF0000', activity: 'Jump up and down 5 times!', audioId: 'jump' },
-        { color: '#FF0000', activity: 'Make a silly face!', audioId: 'face' },
-        { color: '#FF0000', activity: 'Pretend you\'re a superhero flying!', audioId: 'superhero' },
-        { color: '#FF0000', activity: 'Dance like nobody\'s watching!', audioId: 'dance' },
-        { color: '#FF0000', activity: 'Make your silliest noise!', audioId: 'noise' },
-        
-        // Yellow segments
-        { color: '#FFEB3B', activity: 'Turn around 3 times!', audioId: 'turn' },
-        { color: '#FFEB3B', activity: null, audioId: 'safe' }, // Safe segment
-        { color: '#FFEB3B', activity: 'Do 3 jumping jacks!', audioId: 'jumping' },
-        { color: '#FFEB3B', activity: 'Sing your favorite song for 10 seconds!', audioId: 'sing' },
-        { color: '#FFEB3B', activity: 'Blow a giant imaginary bubble!', audioId: 'bubble' },
-        
-        // Green segments
-        { color: '#4CAF50', activity: 'Do your best dinosaur impression!', audioId: 'dinosaur' },
-        { color: '#4CAF50', activity: null, audioId: 'safe2' }, // Safe segment
-        { color: '#4CAF50', activity: 'Do a funny animal walk!', audioId: 'animal' },
-        { color: '#4CAF50', activity: 'Freeze like a statue for 10 seconds!', audioId: 'freeze' },
-        { color: '#4CAF50', activity: 'Touch your toes 5 times!', audioId: 'toes' },
-        
-        // Gray segments
-        { color: '#9E9E9E', activity: 'Hop on one foot for 10 seconds!', audioId: 'hop' },
-        { color: '#9E9E9E', activity: null, audioId: 'safe3' }, // Safe segment
-        { color: '#9E9E9E', activity: 'Count backwards from 10 to 1!', audioId: 'count' }
+    // Define all 20 fun activities
+    const allActivities = [
+        { activity: 'Jump up and down 5 times!', audioId: 'jump' },
+        { activity: 'Make a silly face!', audioId: 'face' },
+        { activity: 'Pretend you\'re a superhero flying!', audioId: 'superhero' },
+        { activity: 'Dance like nobody\'s watching!', audioId: 'dance' },
+        { activity: 'Make your silliest noise!', audioId: 'noise' },
+        { activity: 'Turn around 3 times!', audioId: 'turn' },
+        { activity: 'Do 3 jumping jacks!', audioId: 'jumping' },
+        { activity: 'Sing your favorite song for 10 seconds!', audioId: 'sing' },
+        { activity: 'Blow a giant imaginary bubble!', audioId: 'bubble' },
+        { activity: 'Do your best dinosaur impression!', audioId: 'dinosaur' },
+        { activity: 'Do a funny animal walk!', audioId: 'animal' },
+        { activity: 'Freeze like a statue for 10 seconds!', audioId: 'freeze' },
+        { activity: 'Touch your toes 5 times!', audioId: 'toes' },
+        { activity: 'Hop on one foot for 10 seconds!', audioId: 'hop' },
+        { activity: 'Count backwards from 10 to 1!', audioId: 'count' },
+        { activity: 'Clap your hands 10 times!', audioId: 'jump' },
+        { activity: 'Wiggle like a jellyfish!', audioId: 'face' },
+        { activity: 'March in place for 10 seconds!', audioId: 'superhero' },
+        { activity: 'Spin in a circle!', audioId: 'turn' },
+        { activity: 'Roar like a lion!', audioId: 'noise' }
     ];
+    
+    // Color definitions
+    const colorConfig = [
+        { color: '#FF0000', name: 'red' },    // Red
+        { color: '#FFEB3B', name: 'yellow' }, // Yellow
+        { color: '#4CAF50', name: 'green' },  // Green
+        { color: '#9E9E9E', name: 'gray' }    // Gray
+    ];
+    
+    // Create segments with proper alternating patterns to avoid adjacent same colors
+    function createBalancedSegments() {
+        // Define the segment structure to have 2 of each color
+        let colorSequence = [];
+        
+        // Create a valid pattern with no adjacent same colors
+        // We'll use a predefined valid pattern: red, yellow, green, gray, red, yellow, green, gray
+        // This guarantees no adjacent same colors in a wheel
+        colorSequence = [
+            colorConfig[0], // red
+            colorConfig[1], // yellow  
+            colorConfig[2], // green
+            colorConfig[3], // gray
+            colorConfig[0], // red
+            colorConfig[1], // yellow
+            colorConfig[2], // green
+            colorConfig[3]  // gray
+        ];
+        
+        // Shuffle while preserving the property of no adjacent same colors
+        for (let i = 0; i < 10; i++) {  // Do several shuffle passes
+            const indices = [0, 1, 2, 3, 4, 5, 6, 7];
+            const shuffled = [];
+            
+            // Pick random pairs and swap them to maintain no-adjacent-same-color property
+            while (indices.length > 0) {
+                const idx = Math.floor(Math.random() * indices.length);
+                const val = indices.splice(idx, 1)[0];
+                shuffled.push(val);
+            }
+            
+            // Check if the shuffle maintains our property (no adjacent same colors)
+            let valid = true;
+            for (let j = 0; j < 8; j++) {
+                // Check if adjacent colors are the same (including wrapping around)
+                if (colorSequence[shuffled[j]].name === colorSequence[shuffled[(j+1)%8]].name) {
+                    valid = false;
+                    break;
+                }
+            }
+            
+            // If valid, apply shuffle
+            if (valid) {
+                const newSequence = shuffled.map(idx => colorSequence[idx]);
+                colorSequence = newSequence;
+                break;
+            }
+        }
+        
+        // Now assign activities to the segments
+        // We need exactly 8 segments: 6 with activities and 2 safe spaces
+        const randomActivities = getRandomActivities(6);  // Get 6 random activities
+        
+        // Create a mask for which segments should be safe spaces
+        // Pick 2 random positions for safe spaces, ensure they're different colors
+        let safePositions = [];
+        
+        // Ensure the safe spaces are on different colors
+        const colorPositions = {};
+        colorSequence.forEach((color, idx) => {
+            if (!colorPositions[color.name]) {
+                colorPositions[color.name] = [];
+            }
+            colorPositions[color.name].push(idx);
+        });
+        
+        // Pick one position from each of two different colors
+        const colorNames = Object.keys(colorPositions);
+        const selectedColors = [];
+        
+        // Randomly select two different colors for safe spaces
+        while (selectedColors.length < 2) {
+            const randomColorIdx = Math.floor(Math.random() * colorNames.length);
+            const colorName = colorNames[randomColorIdx];
+            
+            if (!selectedColors.includes(colorName)) {
+                selectedColors.push(colorName);
+            }
+        }
+        
+        // For each selected color, choose one of its positions
+        selectedColors.forEach(colorName => {
+            const positions = colorPositions[colorName];
+            const randomPosIdx = Math.floor(Math.random() * positions.length);
+            safePositions.push(positions[randomPosIdx]);
+        });
+        
+        console.log("Safe positions:", safePositions);
+        
+        // Now create the segments
+        return colorSequence.map((colorInfo, index) => {
+            // Check if this position should be a safe space
+            if (safePositions.includes(index)) {
+                return {
+                    color: colorInfo.color,
+                    activity: null, 
+                    audioId: 'safe'
+                };
+            } else {
+                // Calculate which activity to use
+                // We need to map 6 activities across the 6 non-safe positions
+                // First, get position in the non-safe list
+                const nonSafePosition = index - safePositions.filter(pos => pos < index).length;
+                const activity = randomActivities[nonSafePosition];
+                
+                return {
+                    color: colorInfo.color,
+                    activity: activity.activity,
+                    audioId: activity.audioId
+                };
+            }
+        });
+    }
+    
+    // Create the properly distributed segments
+    const segments = createBalancedSegments();
+    
+    // Function to select random activity without duplicates
+    function getRandomActivities(count) {
+        const shuffled = [...allActivities].sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, count);
+    }
+    
+    // Assign random activities to non-safe segments (6 segments need activities)
+    const randomActivities = getRandomActivities(6);
+    let activityIndex = 0;
+    
+    for (let i = 0; i < segments.length; i++) {
+        if (segments[i].activity !== null) {
+            segments[i].activity = randomActivities[activityIndex].activity;
+            segments[i].audioId = randomActivities[activityIndex].audioId;
+            activityIndex++;
+        }
+    }
+    
+    // Log the final segments
+    console.log("Total segments:", segments.length);
+    
+    // Count segments of each color
+    const colorCounts = {};
+    segments.forEach(segment => {
+        if (!colorCounts[segment.color]) {
+            colorCounts[segment.color] = 0;
+        }
+        colorCounts[segment.color]++;
+    });
+    
+    // Log color counts
+    console.log("Color distribution:");
+    Object.keys(colorCounts).forEach(color => {
+        console.log(`${color}: ${colorCounts[color]} segments`);
+    });
+    
+    // Check for adjacent same colors
+    let hasAdjacentSameColors = false;
+    for (let i = 0; i < segments.length; i++) {
+        const currColor = segments[i].color;
+        const nextColor = segments[(i + 1) % segments.length].color;
+        if (currColor === nextColor) {
+            console.log(`Warning: Same color (${currColor}) at positions ${i+1} and ${(i+1) % segments.length + 1}`);
+            hasAdjacentSameColors = true;
+        }
+    }
+    
+    if (!hasAdjacentSameColors) {
+        console.log("Perfect: No adjacent same colors found!");
+    }
+    
+    // Log all activities that will show up on this spin
+    console.log("Activities in this wheel:");
+    segments.forEach((segment, index) => {
+        console.log(`Segment ${index+1}: ${segment.activity || 'SAFE SPACE'} (${segment.color})`);
+    });
 
     // Check if speech synthesis is supported
     const speechSynthesisSupported = 'speechSynthesis' in window;
@@ -249,8 +426,15 @@ document.addEventListener('DOMContentLoaded', () => {
         
         segments.forEach((segment, index) => {
             const segmentElement = document.createElement('div');
-            segmentElement.className = 'wheel-segment';
+            
+            // Add both the general class and a color-specific class
+            // Remove the # and convert to lowercase for the CSS class
+            const colorClass = 'color-' + segment.color.substring(1).toLowerCase();
+            segmentElement.className = `wheel-segment ${colorClass}`;
             segmentElement.style.backgroundColor = segment.color;
+            
+            // Add a debug text to verify the segment color (temporary)
+            console.log(`Creating segment with color: ${segment.color}, class: ${colorClass}`);
             
             // Calculate the rotation angle for each segment
             const rotationAngle = segmentAngle * index;
@@ -481,7 +665,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             result.textContent = resultText;
-            result.classList.add('animate-result');
+            
+            // Clear previous animation classes
+            result.classList.remove('animate-result', 'safe-result', 'activity-result');
+            
+            // Force browser to recalculate styles for animation to trigger again
+            void result.offsetWidth;
+            
+            if (selectedSegment.activity) {
+                // Activity animation
+                result.classList.add('animate-result', 'activity-result');
+            } else {
+                // Safe space animation
+                result.classList.add('safe-result');
+            }
             
             // Re-enable the spin button
             spinButton.disabled = false;
