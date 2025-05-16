@@ -11,6 +11,42 @@ document.addEventListener('DOMContentLoaded', () => {
         { color: '#03A9F4', activity: 'Do 3 jumping jacks!' }
     ];
 
+    // Check if speech synthesis is supported
+    const speechSynthesisSupported = 'speechSynthesis' in window;
+    
+    // Initialize speech synthesis voices
+    let femaleVoices = [];
+    
+    if (speechSynthesisSupported) {
+        function loadVoices() {
+            const voices = window.speechSynthesis.getVoices();
+            femaleVoices = voices.filter(voice => 
+                voice.name.includes('female') || 
+                voice.name.includes('woman') ||
+                voice.name.includes('girl') ||
+                voice.name.includes('Samantha') ||
+                voice.name.includes('Victoria') ||
+                voice.name.includes('Karen') ||
+                voice.name.includes('Tessa') ||
+                voice.name.includes('Moira') ||
+                voice.name.includes('Veena') ||
+                // Filter for female voice by checking for higher pitch characteristic
+                (voice.name.includes('Google') && !voice.name.includes('Male'))
+            );
+            console.log('Available female voices:', femaleVoices.map(v => v.name));
+        }
+        
+        // Initialize voices
+        loadVoices();
+        
+        // Voices may load asynchronously, so we need this event
+        if (window.speechSynthesis.onvoiceschanged !== undefined) {
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+        }
+    } else {
+        console.warn('Speech synthesis not supported in this browser');
+    }
+
     // Sound effects
     const sounds = {
         spinStart: new Audio('sounds/spin-start.mp3'),
@@ -99,7 +135,44 @@ document.addEventListener('DOMContentLoaded', () => {
             if (selectedSegment.activity) {
                 resultText = `${selectedSegment.activity} 🔥`;
                 // Play activity sound after a small delay to not overlap with spin end sound
-                setTimeout(() => sounds.activity.play(), 300);
+                setTimeout(() => {
+                    sounds.activity.play();
+                    
+                    // Add speech synthesis with woman's voice if supported
+                    if (speechSynthesisSupported) {
+                        const speech = new SpeechSynthesisUtterance(selectedSegment.activity);
+                        speech.volume = 1;
+                        speech.rate = 1;
+                        speech.pitch = 1.2; // Slightly higher pitch for female voice
+                        
+                        // Select a female voice
+                        if (femaleVoices.length > 0) {
+                            // Prioritize certain voices if available
+                            const preferredVoices = ['Samantha', 'Victoria', 'Karen', 'Moira', 'Veena'];
+                            let selectedVoice = null;
+                            
+                            // First try to find one of our preferred voices
+                            for (const name of preferredVoices) {
+                                const voice = femaleVoices.find(v => v.name.includes(name));
+                                if (voice) {
+                                    selectedVoice = voice;
+                                    break;
+                                }
+                            }
+                            
+                            // If no preferred voice found, use the first female voice
+                            speech.voice = selectedVoice || femaleVoices[0];
+                            
+                            console.log(`Speaking with voice: ${speech.voice.name}`);
+                        }
+                        
+                        // Cancel any ongoing speech
+                        window.speechSynthesis.cancel();
+                        
+                        // Speak the activity
+                        window.speechSynthesis.speak(speech);
+                    }
+                }, 300);
             } else {
                 resultText = 'Whew! You\'re safe this time! 😅';
             }
