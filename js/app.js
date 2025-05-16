@@ -5,8 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
         { color: '#FFEB3B', activity: 'Turn around 3 times!' },
         { color: '#2196F3', activity: null }, // Safe segment
         { color: '#4CAF50', activity: 'Do your best dinosaur impression!' },
-        { color: '#9C27B0', activity: 'Hop on one foot for 10 seconds!' },
-        { color: '#FF9800', activity: null }, // Safe segment
+        { color: '#9E9E9E', activity: 'Hop on one foot for 10 seconds!' }, // Gray (was purple)
+        { color: '#FFEB3B', activity: null }, // Yellow (was orange)
         { color: '#E91E63', activity: 'Make a silly face!' },
         { color: '#03A9F4', activity: 'Do 3 jumping jacks!' }
     ];
