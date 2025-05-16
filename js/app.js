@@ -98,27 +98,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // Configuration
+    // Configuration with simplified colors (red, yellow, green, gray)
     const segments = [
+        // Red segments
         { color: '#FF5252', activity: 'Jump up and down 5 times!', audioId: 'jump' },
+        { color: '#FF5252', activity: 'Make a silly face!', audioId: 'face' },
+        { color: '#FF5252', activity: 'Pretend you\'re a superhero flying!', audioId: 'superhero' },
+        { color: '#FF5252', activity: 'Dance like nobody\'s watching!', audioId: 'dance' },
+        { color: '#FF5252', activity: 'Make your silliest noise!', audioId: 'noise' },
+        
+        // Yellow segments
         { color: '#FFEB3B', activity: 'Turn around 3 times!', audioId: 'turn' },
-        { color: '#2196F3', activity: null, audioId: 'safe' }, // Safe segment
+        { color: '#FFEB3B', activity: null, audioId: 'safe' }, // Safe segment
+        { color: '#FFEB3B', activity: 'Do 3 jumping jacks!', audioId: 'jumping' },
+        { color: '#FFEB3B', activity: 'Sing your favorite song for 10 seconds!', audioId: 'sing' },
+        { color: '#FFEB3B', activity: 'Blow a giant imaginary bubble!', audioId: 'bubble' },
+        
+        // Green segments
         { color: '#4CAF50', activity: 'Do your best dinosaur impression!', audioId: 'dinosaur' },
-        { color: '#9E9E9E', activity: 'Hop on one foot for 10 seconds!', audioId: 'hop' }, // Gray (was purple)
-        { color: '#FFEB3B', activity: null, audioId: 'safe2' }, // Yellow (was orange)
-        { color: '#E91E63', activity: 'Make a silly face!', audioId: 'face' },
-        { color: '#03A9F4', activity: 'Do 3 jumping jacks!', audioId: 'jumping' },
-        // New activities for kids 6-8
-        { color: '#FF9800', activity: 'Pretend you\'re a superhero flying!', audioId: 'superhero' },
+        { color: '#4CAF50', activity: null, audioId: 'safe2' }, // Safe segment
         { color: '#4CAF50', activity: 'Do a funny animal walk!', audioId: 'animal' },
-        { color: '#9C27B0', activity: 'Sing your favorite song for 10 seconds!', audioId: 'sing' },
-        { color: '#3F51B5', activity: 'Freeze like a statue for 10 seconds!', audioId: 'freeze' },
-        { color: '#2196F3', activity: null, audioId: 'safe3' }, // Another safe segment
-        { color: '#FF5722', activity: 'Dance like nobody\'s watching!', audioId: 'dance' },
-        { color: '#607D8B', activity: 'Count backwards from 10 to 1!', audioId: 'count' },
-        { color: '#8BC34A', activity: 'Touch your toes 5 times!', audioId: 'toes' },
-        { color: '#FFC107', activity: 'Blow a giant imaginary bubble!', audioId: 'bubble' },
-        { color: '#00BCD4', activity: 'Make your silliest noise!', audioId: 'noise' }
+        { color: '#4CAF50', activity: 'Freeze like a statue for 10 seconds!', audioId: 'freeze' },
+        { color: '#4CAF50', activity: 'Touch your toes 5 times!', audioId: 'toes' },
+        
+        // Gray segments
+        { color: '#9E9E9E', activity: 'Hop on one foot for 10 seconds!', audioId: 'hop' },
+        { color: '#9E9E9E', activity: null, audioId: 'safe3' }, // Safe segment
+        { color: '#9E9E9E', activity: 'Count backwards from 10 to 1!', audioId: 'count' }
     ];
 
     // Check if speech synthesis is supported
