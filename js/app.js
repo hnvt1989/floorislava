@@ -101,11 +101,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Configuration with simplified colors (red, yellow, green, gray)
     const segments = [
         // Red segments
-        { color: '#FF5252', activity: 'Jump up and down 5 times!', audioId: 'jump' },
-        { color: '#FF5252', activity: 'Make a silly face!', audioId: 'face' },
-        { color: '#FF5252', activity: 'Pretend you\'re a superhero flying!', audioId: 'superhero' },
-        { color: '#FF5252', activity: 'Dance like nobody\'s watching!', audioId: 'dance' },
-        { color: '#FF5252', activity: 'Make your silliest noise!', audioId: 'noise' },
+        { color: '#FF0000', activity: 'Jump up and down 5 times!', audioId: 'jump' },
+        { color: '#FF0000', activity: 'Make a silly face!', audioId: 'face' },
+        { color: '#FF0000', activity: 'Pretend you\'re a superhero flying!', audioId: 'superhero' },
+        { color: '#FF0000', activity: 'Dance like nobody\'s watching!', audioId: 'dance' },
+        { color: '#FF0000', activity: 'Make your silliest noise!', audioId: 'noise' },
         
         // Yellow segments
         { color: '#FFEB3B', activity: 'Turn around 3 times!', audioId: 'turn' },
