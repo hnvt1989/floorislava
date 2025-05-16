@@ -29,11 +29,15 @@
             <p>⚠️ For the best experience with voice narration, please:</p>
             <ol style="text-align: left; margin: 10px auto; display: inline-block;">
                 <li>Make sure your device sound is on</li>
-                <li>For iOS devices: tap the "Enable Audio" button below first</li>
+                <li>For iOS devices: First tap "Enable Audio" below</li>
+                <li>Then tap "Start Playback Test"</li>
                 <li>Then tap SPIN to play the game</li>
             </ol>
-            <button id="enable-audio" style="background-color: #4CAF50; color: white; border: none; padding: 8px 15px; margin: 5px; border-radius: 4px; cursor: pointer;">Enable Audio</button>
-            <button id="dismiss-audio-warning" style="background-color: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Got it!</button>
+            <div style="display: flex; flex-direction: column; gap: 10px; max-width: 300px; margin: 0 auto;">
+                <button id="enable-audio" style="background-color: #4CAF50; color: white; border: none; padding: 8px 15px; margin: 5px; border-radius: 4px; cursor: pointer;">1. Enable Audio</button>
+                <button id="test-audio" style="background-color: #2196F3; color: white; border: none; padding: 8px 15px; margin: 5px; border-radius: 4px; cursor: pointer;">2. Start Playback Test</button>
+                <button id="dismiss-audio-warning" style="background-color: #ff4d4d; color: white; border: none; padding: 5px 10px; margin: 5px; border-radius: 4px; cursor: pointer;">Hide This Message</button>
+            </div>
         </div>
     </div>
 

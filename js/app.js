@@ -75,6 +75,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize audio on first user interaction
     document.body.addEventListener('click', initializeAudio, { once: true });
     
+    // Handle the test audio button
+    document.getElementById('test-audio').addEventListener('click', () => {
+        try {
+            // Play a test sound to confirm audio is working
+            const testAudio = new Audio("https://cdn.freesound.org/previews/242/242758_4484625-lq.mp3");
+            testAudio.volume = 1.0;
+            
+            const testButton = document.getElementById('test-audio');
+            testButton.textContent = "Playing test...";
+            
+            testAudio.play().then(() => {
+                testButton.textContent = "Audio Works! ✓";
+                testButton.style.backgroundColor = "#4CAF50";
+            }).catch(error => {
+                console.error("Test audio error:", error);
+                testButton.textContent = "Audio Failed! Try again";
+                testButton.style.backgroundColor = "#F44336";
+            });
+        } catch (error) {
+            console.error("Error setting up test audio:", error);
+        }
+    });
+    
     // Configuration
     const segments = [
         { color: '#FF5252', activity: 'Jump up and down 5 times!', audioId: 'jump' },
@@ -144,29 +167,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const sounds = {
         spinStart: new Audio('sounds/spin-start.mp3'),
         spinEnd: new Audio('sounds/spin-end.mp3'),
-        spinning: new Audio('https://assets.mixkit.co/active_storage/sfx/2646/2646-preview.mp3'),
-        voiceIntro: new Audio('https://assets.mixkit.co/active_storage/sfx/1627/1627-preview.mp3'),
-        // Activity voice clips
-        activityJump: new Audio('https://texttospeech.responsivevoice.org/v1/text:synthesize?text=Jump%20up%20and%20down%205%20times!&lang=en-US&engine=g1&rate=0.5&key=vzGmGw8J&gender=female&voice=UK+English+Female'),
-        activityTurn: new Audio('https://texttospeech.responsivevoice.org/v1/text:synthesize?text=Turn%20around%203%20times!&lang=en-US&engine=g1&rate=0.5&key=vzGmGw8J&gender=female&voice=UK+English+Female'),
-        activitySafe: new Audio('https://texttospeech.responsivevoice.org/v1/text:synthesize?text=Whew!%20You%27re%20safe%20this%20time!&lang=en-US&engine=g1&rate=0.5&key=vzGmGw8J&gender=female&voice=UK+English+Female'),
-        activityDinosaur: new Audio('https://texttospeech.responsivevoice.org/v1/text:synthesize?text=Do%20your%20best%20dinosaur%20impression!&lang=en-US&engine=g1&rate=0.5&key=vzGmGw8J&gender=female&voice=UK+English+Female'),
-        activityHop: new Audio('https://texttospeech.responsivevoice.org/v1/text:synthesize?text=Hop%20on%20one%20foot%20for%2010%20seconds!&lang=en-US&engine=g1&rate=0.5&key=vzGmGw8J&gender=female&voice=UK+English+Female'),
-        activityFace: new Audio('https://texttospeech.responsivevoice.org/v1/text:synthesize?text=Make%20a%20silly%20face!&lang=en-US&engine=g1&rate=0.5&key=vzGmGw8J&gender=female&voice=UK+English+Female'),
-        activityJumping: new Audio('https://texttospeech.responsivevoice.org/v1/text:synthesize?text=Do%203%20jumping%20jacks!&lang=en-US&engine=g1&rate=0.5&key=vzGmGw8J&gender=female&voice=UK+English+Female')
+        spinning: new Audio('https://assets.mixkit.co/active_storage/sfx/2646/2646-preview.mp3')
     };
     
-    // Map activity IDs to sound files
-    const activitySounds = {
-        'jump': sounds.activityJump,
-        'turn': sounds.activityTurn,
-        'safe': sounds.activitySafe,
-        'safe2': sounds.activitySafe,
-        'dinosaur': sounds.activityDinosaur,
-        'hop': sounds.activityHop,
-        'face': sounds.activityFace,
-        'jumping': sounds.activityJumping
+    // Activity voice clips using direct CDN URLs that work on iOS
+    const activityAudios = {
+        jump: 'https://cdn.freesound.org/previews/473/473369_3288231-lq.mp3',
+        turn: 'https://cdn.freesound.org/previews/399/399934_7666412-lq.mp3',
+        safe: 'https://cdn.freesound.org/previews/339/339832_5121236-lq.mp3',
+        dinosaur: 'https://cdn.freesound.org/previews/242/242764_4484625-lq.mp3',
+        hop: 'https://cdn.freesound.org/previews/242/242756_4484625-lq.mp3',
+        face: 'https://cdn.freesound.org/previews/242/242757_4484625-lq.mp3',
+        jumping: 'https://cdn.freesound.org/previews/242/242760_4484625-lq.mp3'
     };
+    
+    // Initialize activity sounds objects
+    const activitySounds = {};
+    
+    // We'll create Audio objects on-demand for iOS compatibility
+    function getActivityAudio(activityId) {
+        // Check if we already have the audio object
+        if (!activitySounds[activityId]) {
+            // Create audio object on first use
+            const audioUrl = activityAudios[activityId] || activityAudios['safe']; // Default to safe if not found
+            activitySounds[activityId] = new Audio(audioUrl);
+            activitySounds[activityId].load(); // Pre-load
+        }
+        
+        return activitySounds[activityId];
+    }
     
     // Preload all sounds
     for (const sound in sounds) {
@@ -252,129 +281,155 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Start speaking while spinning
         setTimeout(() => {
-            sounds.voiceIntro.play();
-            
-            // Set up voice to speak after voice intro finishes
-            sounds.voiceIntro.onended = () => {
-                speakText();
-            };
+            // Skip voice intro sound and directly speak text
+            speakText();
         }, 1000);
         
         // Function to handle text-to-speech using either speech synthesis or pre-recorded audio
         function speakText() {
-            // Check if it's an iOS device
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            
-            // Use pre-recorded audio for iOS devices or when speech synthesis isn't supported
+            // Always use audio files on iOS or when speech synthesis isn't supported
             if (isIOS || !speechSynthesisSupported) {
                 console.log("Using pre-recorded audio for speech");
-                // Get the appropriate audio file based on the segment's audioId
-                const audioToPlay = activitySounds[selectedSegment.audioId];
-                
-                if (audioToPlay) {
-                    // Reset audio to start (in case it was played before)
-                    audioToPlay.currentTime = 0;
-                    
-                    // Play the audio file
-                    try {
-                        const playPromise = audioToPlay.play();
-                        
-                        // Modern browsers return a promise from play()
-                        if (playPromise !== undefined) {
-                            playPromise.catch(error => {
-                                console.error("Error playing audio:", error);
-                                // On iOS, audio can only play after user interaction
-                                // Show a message to the user
-                                const audioPermissionMessage = document.getElementById('audio-permission');
-                                audioPermissionMessage.style.display = 'block';
-                            });
-                        }
-                    } catch (error) {
-                        console.error("Error playing activity audio:", error);
-                    }
-                } else {
-                    console.warn("No audio file found for activity:", selectedSegment.audioId);
-                }
+                playActivitySound();
             } else {
                 // Use speech synthesis for non-iOS devices that support it
-                // Determine what to say based on the segment
-                const textToSpeak = selectedSegment.activity ? 
-                    selectedSegment.activity : 
-                    "Whew! You're safe this time!";
+                speakWithSynthesis();
+            }
+        }
+        
+        // Function to play pre-recorded audio files for the activity
+        function playActivitySound() {
+            try {
+                // Create a new audio object every time for iOS
+                const audioUrl = activityAudios[selectedSegment.audioId];
+                const audio = new Audio(audioUrl);
                 
-                // Retry function to ensure speech works
-                function trySpeak() {
-                    // Cancel any previous speech
-                    window.speechSynthesis.cancel();
-                    
-                    // Check if voices are available
-                    if (femaleVoices.length === 0) {
-                        // Try to load voices again if they're not available
-                        const voices = window.speechSynthesis.getVoices();
-                        if (voices.length > 0) {
-                            femaleVoices = voices;
-                        } else {
-                            console.warn("No voices available for speech, retrying...");
-                            setTimeout(trySpeak, 100);
-                            return;
-                        }
-                    }
-                    
-                    const speech = new SpeechSynthesisUtterance(textToSpeak);
-                    speech.volume = 1;
-                    speech.rate = 1;
-                    speech.pitch = 1.2; // Slightly higher pitch for female voice
-                    
-                    // Select a voice
-                    if (femaleVoices.length > 0) {
-                        // Prioritize certain voices if available
-                        const preferredVoices = ['Samantha', 'Victoria', 'Karen', 'Moira', 'Veena'];
-                        let selectedVoice = null;
-                        
-                        // First try to find one of our preferred voices
-                        for (const name of preferredVoices) {
-                            const voice = femaleVoices.find(v => v.name.includes(name));
-                            if (voice) {
-                                selectedVoice = voice;
-                                break;
+                // Log which audio we're trying to play
+                console.log("Playing activity audio:", selectedSegment.audioId, "URL:", audioUrl);
+                
+                // Set volume and try to play
+                audio.volume = 1.0;
+                
+                // Update the test button to show which activity is playing
+                const testButton = document.getElementById('test-audio');
+                if (testButton) {
+                    testButton.innerText = "Playing: " + selectedSegment.audioId;
+                    testButton.style.backgroundColor = "#2196F3";
+                }
+                
+                // Play the audio with error handling
+                const playPromise = audio.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise
+                        .then(() => {
+                            console.log("Audio playing successfully:", selectedSegment.audioId);
+                            if (testButton) {
+                                testButton.innerText = "Audio playing ✓";
+                                testButton.style.backgroundColor = "#4CAF50";
                             }
-                        }
-                        
-                        // If no preferred voice found, use the first voice
-                        speech.voice = selectedVoice || femaleVoices[0];
-                        console.log(`Speaking with voice: ${speech.voice ? speech.voice.name : 'default'}`);
-                    }
-                    
-                    // Add event handlers to manage speech state
-                    speech.onend = function() {
-                        console.log("Speech finished successfully");
-                    };
-                    
-                    speech.onerror = function(event) {
-                        console.error("Speech synthesis error:", event);
-                        
-                        // Fallback to audio files if speech synthesis fails
-                        const audioToPlay = activitySounds[selectedSegment.audioId];
-                        if (audioToPlay) {
-                            audioToPlay.currentTime = 0;
-                            audioToPlay.play().catch(e => console.error("Fallback audio failed:", e));
-                        }
-                    };
-                    
-                    // Speak the text
-                    window.speechSynthesis.speak(speech);
-                    
-                    // Chrome/Edge bug workaround: speech can cut off, so we reset it
-                    if (window.navigator.userAgent.includes("Chrome") || 
-                        window.navigator.userAgent.includes("Edge")) {
-                        window.speechSynthesis.pause();
-                        window.speechSynthesis.resume();
+                        })
+                        .catch(error => {
+                            console.error("Error playing activity audio:", error);
+                            
+                            // Show error message on screen for debugging
+                            const errorMessage = document.createElement('div');
+                            errorMessage.style.color = 'red';
+                            errorMessage.style.padding = '10px';
+                            errorMessage.innerText = "Audio error: " + error.message;
+                            document.body.appendChild(errorMessage);
+                            
+                            // Show the audio permission message
+                            const audioPermissionMessage = document.getElementById('audio-permission');
+                            audioPermissionMessage.style.display = 'block';
+                            
+                            if (testButton) {
+                                testButton.innerText = "Audio failed ✗";
+                                testButton.style.backgroundColor = "#F44336";
+                            }
+                        });
+                }
+            } catch (error) {
+                console.error("Error setting up activity audio:", error);
+            }
+        }
+        
+        // Function to use speech synthesis API
+        function speakWithSynthesis() {
+            // Determine what to say based on the segment
+            const textToSpeak = selectedSegment.activity ? 
+                selectedSegment.activity : 
+                "Whew! You're safe this time!";
+            
+            // Retry function to ensure speech works
+            function trySpeak() {
+                // Cancel any previous speech
+                window.speechSynthesis.cancel();
+                
+                // Check if voices are available
+                if (femaleVoices.length === 0) {
+                    // Try to load voices again if they're not available
+                    const voices = window.speechSynthesis.getVoices();
+                    if (voices.length > 0) {
+                        femaleVoices = voices;
+                    } else {
+                        console.warn("No voices available for speech, retrying...");
+                        setTimeout(trySpeak, 100);
+                        return;
                     }
                 }
                 
-                // Try to speak
-                trySpeak();
+                const speech = new SpeechSynthesisUtterance(textToSpeak);
+                speech.volume = 1;
+                speech.rate = 1;
+                speech.pitch = 1.2; // Slightly higher pitch for female voice
+                
+                // Select a voice
+                if (femaleVoices.length > 0) {
+                    // Prioritize certain voices if available
+                    const preferredVoices = ['Samantha', 'Victoria', 'Karen', 'Moira', 'Veena'];
+                    let selectedVoice = null;
+                    
+                    // First try to find one of our preferred voices
+                    for (const name of preferredVoices) {
+                        const voice = femaleVoices.find(v => v.name.includes(name));
+                        if (voice) {
+                            selectedVoice = voice;
+                            break;
+                        }
+                    }
+                    
+                    // If no preferred voice found, use the first voice
+                    speech.voice = selectedVoice || femaleVoices[0];
+                    console.log(`Speaking with voice: ${speech.voice ? speech.voice.name : 'default'}`);
+                }
+                
+                // Add event handlers to manage speech state
+                speech.onend = function() {
+                    console.log("Speech finished successfully");
+                };
+                
+                speech.onerror = function(event) {
+                    console.error("Speech synthesis error:", event);
+                    
+                    // Fallback to audio files if speech synthesis fails
+                    playActivitySound();
+                };
+                
+                // Speak the text
+                window.speechSynthesis.speak(speech);
+                
+                // Chrome/Edge bug workaround: speech can cut off, so we reset it
+                if (window.navigator.userAgent.includes("Chrome") || 
+                    window.navigator.userAgent.includes("Edge")) {
+                    window.speechSynthesis.pause();
+                    window.speechSynthesis.resume();
+                }
             }
+            
+            // Try to speak
+            trySpeak();
         }
         
         // Show the result after the wheel stops spinning
