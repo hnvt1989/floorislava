@@ -51,8 +51,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const sounds = {
         spinStart: new Audio('sounds/spin-start.mp3'),
         spinEnd: new Audio('sounds/spin-end.mp3'),
-        activity: new Audio('sounds/activity.mp3')
+        activity: new Audio('sounds/activity.mp3'),
+        spinning: new Audio('https://assets.mixkit.co/active_storage/sfx/2646/2646-preview.mp3'),
+        voiceIntro: new Audio('https://assets.mixkit.co/active_storage/sfx/1627/1627-preview.mp3')
     };
+    
+    // Preload all sounds
+    for (const sound in sounds) {
+        sounds[sound].load();
+    }
 
     // DOM elements
     const wheel = document.querySelector('.wheel');
@@ -91,6 +98,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Play spin start sound
         sounds.spinStart.play();
         
+        // Set up the spinning sound (looping during spin)
+        sounds.spinning.loop = true;
+        
+        // Start the spinning sound with a small delay to not overlap with spin start sound
+        setTimeout(() => sounds.spinning.play(), 300);
+        
         // Reset the result
         result.textContent = 'Spinning...';
         result.classList.remove('animate-result');
@@ -127,6 +140,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Show the result after the wheel stops spinning
         setTimeout(() => {
+            // Stop the spinning sound
+            sounds.spinning.pause();
+            sounds.spinning.currentTime = 0;
+            
             // Play spin end sound
             sounds.spinEnd.play();
             
@@ -134,44 +151,54 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (selectedSegment.activity) {
                 resultText = `${selectedSegment.activity} 🔥`;
+                
                 // Play activity sound after a small delay to not overlap with spin end sound
                 setTimeout(() => {
                     sounds.activity.play();
                     
-                    // Add speech synthesis with woman's voice if supported
-                    if (speechSynthesisSupported) {
-                        const speech = new SpeechSynthesisUtterance(selectedSegment.activity);
-                        speech.volume = 1;
-                        speech.rate = 1;
-                        speech.pitch = 1.2; // Slightly higher pitch for female voice
+                    // Play voice intro sound and then speak the activity
+                    setTimeout(() => {
+                        // Play the voice intro sound
+                        sounds.voiceIntro.play();
                         
-                        // Select a female voice
-                        if (femaleVoices.length > 0) {
-                            // Prioritize certain voices if available
-                            const preferredVoices = ['Samantha', 'Victoria', 'Karen', 'Moira', 'Veena'];
-                            let selectedVoice = null;
-                            
-                            // First try to find one of our preferred voices
-                            for (const name of preferredVoices) {
-                                const voice = femaleVoices.find(v => v.name.includes(name));
-                                if (voice) {
-                                    selectedVoice = voice;
-                                    break;
+                        // Set up voice to speak after voice intro finishes
+                        sounds.voiceIntro.onended = () => {
+                            // Add speech synthesis with woman's voice if supported
+                            if (speechSynthesisSupported) {
+                                const speech = new SpeechSynthesisUtterance(selectedSegment.activity);
+                                speech.volume = 1;
+                                speech.rate = 1;
+                                speech.pitch = 1.2; // Slightly higher pitch for female voice
+                                
+                                // Select a female voice
+                                if (femaleVoices.length > 0) {
+                                    // Prioritize certain voices if available
+                                    const preferredVoices = ['Samantha', 'Victoria', 'Karen', 'Moira', 'Veena'];
+                                    let selectedVoice = null;
+                                    
+                                    // First try to find one of our preferred voices
+                                    for (const name of preferredVoices) {
+                                        const voice = femaleVoices.find(v => v.name.includes(name));
+                                        if (voice) {
+                                            selectedVoice = voice;
+                                            break;
+                                        }
+                                    }
+                                    
+                                    // If no preferred voice found, use the first female voice
+                                    speech.voice = selectedVoice || femaleVoices[0];
+                                    
+                                    console.log(`Speaking with voice: ${speech.voice.name}`);
                                 }
+                                
+                                // Cancel any ongoing speech
+                                window.speechSynthesis.cancel();
+                                
+                                // Speak the activity
+                                window.speechSynthesis.speak(speech);
                             }
-                            
-                            // If no preferred voice found, use the first female voice
-                            speech.voice = selectedVoice || femaleVoices[0];
-                            
-                            console.log(`Speaking with voice: ${speech.voice.name}`);
-                        }
-                        
-                        // Cancel any ongoing speech
-                        window.speechSynthesis.cancel();
-                        
-                        // Speak the activity
-                        window.speechSynthesis.speak(speech);
-                    }
+                        };
+                    }, 300);
                 }, 300);
             } else {
                 resultText = 'Whew! You\'re safe this time! 😅';
