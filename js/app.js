@@ -494,11 +494,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectedIndex = Math.floor(normalizedPosition / segmentAngle);
         const selectedSegment = segments[selectedIndex % segments.length];
         
-        // Start speaking while spinning
-        setTimeout(() => {
-            // Skip voice intro sound and directly speak text
-            speakText();
-        }, 1000);
+        // We'll start speaking after the spin stops and a 2-second pause
+        let voiceTimer = null;
         
         // Function to handle text-to-speech using either speech synthesis or pre-recorded audio
         function speakText() {
@@ -679,6 +676,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Safe space animation
                 result.classList.add('safe-result');
             }
+            
+            // Start the voice after a 2-second pause
+            // Clear any previous voice timer
+            if (voiceTimer) {
+                clearTimeout(voiceTimer);
+            }
+            
+            // Set a timer to start the voice after 2 seconds
+            voiceTimer = setTimeout(() => {
+                console.log("Starting voice after 2-second pause");
+                speakText();
+            }, 2000);
             
             // Re-enable the spin button
             spinButton.disabled = false;
