@@ -11,6 +11,13 @@ document.addEventListener('DOMContentLoaded', () => {
         { color: '#03A9F4', activity: 'Do 3 jumping jacks!' }
     ];
 
+    // Sound effects
+    const sounds = {
+        spinStart: new Audio('sounds/spin-start.mp3'),
+        spinEnd: new Audio('sounds/spin-end.mp3'),
+        activity: new Audio('sounds/activity.mp3')
+    };
+
     // DOM elements
     const wheel = document.querySelector('.wheel');
     const spinButton = document.getElementById('spin-button');
@@ -44,6 +51,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function spinWheel() {
         // Disable the button during spin
         spinButton.disabled = true;
+        
+        // Play spin start sound
+        sounds.spinStart.play();
         
         // Reset the result
         result.textContent = 'Spinning...';
@@ -81,10 +91,15 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Show the result after the wheel stops spinning
         setTimeout(() => {
+            // Play spin end sound
+            sounds.spinEnd.play();
+            
             let resultText;
             
             if (selectedSegment.activity) {
                 resultText = `${selectedSegment.activity} 🔥`;
+                // Play activity sound after a small delay to not overlap with spin end sound
+                setTimeout(() => sounds.activity.play(), 300);
             } else {
                 resultText = 'Whew! You\'re safe this time! 😅';
             }
