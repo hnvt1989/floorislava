@@ -304,76 +304,30 @@ document.addEventListener('DOMContentLoaded', () => {
     // Create the properly distributed segments
     const segments = createBalancedSegments();
     
-    // Round-robin function to select activities in sequence without repeating until all are used
-    // This ensures all activities are presented in turn before repeating any
+    // Completely random function to select activities
+    // Each spin will have totally random activities chosen from the full list
     function getRandomActivities(count) {
-        // Session storage keys
-        const usedActivitiesKey = 'usedActivities';
-        const activityIndexKey = 'activityIndex';
-        
-        // Get or initialize our tracking arrays and indices
-        let usedActivities = [];
-        let activityIndex = 0;
-        
-        try {
-            // Get previously used activities from session storage
-            const usedString = sessionStorage.getItem(usedActivitiesKey);
-            const indexString = sessionStorage.getItem(activityIndexKey);
-            
-            if (usedString) {
-                usedActivities = JSON.parse(usedString);
-            }
-            
-            if (indexString) {
-                activityIndex = parseInt(indexString, 10);
-            }
-        } catch (e) {
-            console.log("Session storage not available:", e);
-        }
-        
-        // If we've used all activities or this is the first run, reset and shuffle
-        if (usedActivities.length === 0 || usedActivities.length >= allActivities.length) {
-            // Start fresh with a newly shuffled list
-            usedActivities = [];
-            
-            // Create a shuffled copy of all activities
-            const shuffled = [...allActivities];
-            let currentIndex = shuffled.length;
-            let randomIndex;
-            
-            // Fisher-Yates shuffle algorithm
-            while (currentIndex !== 0) {
-                randomIndex = Math.floor(Math.random() * currentIndex);
-                currentIndex--;
-                [shuffled[currentIndex], shuffled[randomIndex]] = 
-                [shuffled[randomIndex], shuffled[currentIndex]];
-            }
-            
-            // Store the shuffled list
-            usedActivities = shuffled;
-            activityIndex = 0;
-            
-            console.log("Round-robin: Shuffled all activities and starting fresh");
-        }
-        
-        // Get the next batch of activities in sequence
+        // Create a copy of all activities
+        const allActivitiesCopy = [...allActivities];
         const selectedActivities = [];
         
+        // Select 'count' random activities from the full list
         for (let i = 0; i < count; i++) {
-            // Get activity and increment index with wraparound
-            selectedActivities.push(usedActivities[activityIndex]);
-            activityIndex = (activityIndex + 1) % usedActivities.length;
+            if (allActivitiesCopy.length === 0) {
+                // If somehow we run out of activities (should never happen), refill
+                break;
+            }
+            
+            // Pick a random activity from the remaining list
+            const randomIndex = Math.floor(Math.random() * allActivitiesCopy.length);
+            selectedActivities.push(allActivitiesCopy[randomIndex]);
+            
+            // Remove the selected activity to avoid duplicates within this spin
+            allActivitiesCopy.splice(randomIndex, 1);
         }
         
-        // Update session storage
-        try {
-            sessionStorage.setItem(usedActivitiesKey, JSON.stringify(usedActivities));
-            sessionStorage.setItem(activityIndexKey, activityIndex.toString());
-        } catch (e) {
-            console.log("Unable to store in session storage:", e);
-        }
-        
-        console.log("Round-robin: Selected activities for this round:", selectedActivities.map(a => a.activity));
+        // Log the selected activities
+        console.log("Totally random activities for this round:", selectedActivities.map(a => a.activity));
         
         return selectedActivities;
     }
@@ -568,6 +522,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Set clip path for the segment (fixed angle)
             segmentElement.style.clipPath = `polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%)`;
             
+            // Add a data attribute to identify this segment
+            segmentElement.dataset.segmentIndex = index;
+            
             wheel.appendChild(segmentElement);
         });
     }
@@ -596,6 +553,20 @@ document.addEventListener('DOMContentLoaded', () => {
         // Force reflow
         wheel.offsetHeight;
         
+        // IMPORTANT: Re-assign random activities for each spin
+        // This ensures completely random activities every time
+        const newRandomActivities = getRandomActivities(6);
+        let activityIndex = 0;
+        
+        // Update segments with new random activities
+        for (let i = 0; i < segments.length; i++) {
+            if (segments[i].activity !== null) {
+                segments[i].activity = newRandomActivities[activityIndex].activity;
+                segments[i].audioId = newRandomActivities[activityIndex].audioId;
+                activityIndex++;
+            }
+        }
+        
         // Generate a random rotation (between 5 and 10 full rotations)
         const rotations = 5 + Math.random() * 5;
         const degrees = rotations * 360;
@@ -603,21 +574,24 @@ document.addEventListener('DOMContentLoaded', () => {
         // Calculate which segment will be selected
         const segmentAngle = 360 / segments.length;
         
-        // Random angle within the total range (small offset to avoid edge cases)
-        const randomAngle = Math.floor(Math.random() * 360);
-        const totalRotation = degrees + randomAngle;
+        // For truly random selection, pick a random segment directly
+        // Then set the final angle to land on that segment
+        const randomSegmentIndex = Math.floor(Math.random() * segments.length);
+        
+        // Calculate the angle needed to land on this segment
+        // Add a small random offset within the segment to make it look natural
+        const segmentOffset = Math.random() * (segmentAngle * 0.7) + (segmentAngle * 0.15);
+        const targetAngle = (randomSegmentIndex * segmentAngle) + segmentOffset;
+        
+        // Calculate total rotation: full rotations + angle to target segment
+        const totalRotation = degrees + targetAngle;
         
         // Add the transition back
         wheel.style.transition = 'transform 4s cubic-bezier(0.17, 0.67, 0.83, 0.67)';
         wheel.style.transform = `rotate(${totalRotation}deg)`;
         
-        // Calculate which segment is selected (based on where the wheel stops)
-        // The modulo operation ensures we get a value between 0 and 360
-        const finalPosition = (totalRotation % 360);
-        // We need to normalize this position to map to our segments
-        const normalizedPosition = (360 - finalPosition) % 360;
-        const selectedIndex = Math.floor(normalizedPosition / segmentAngle);
-        const selectedSegment = segments[selectedIndex % segments.length];
+        // Set the selected segment based on our random choice
+        const selectedSegment = segments[randomSegmentIndex];
         
         // We'll start speaking after the spin stops and a 2-second pause
         let voiceTimer = null;
