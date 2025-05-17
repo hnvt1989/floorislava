@@ -6,7 +6,10 @@
 
 body {
     font-family: 'Fredoka One', cursive;
-    background: linear-gradient(135deg, #ffcc33, #ff6666);
+    background: url('../princess.png'), linear-gradient(135deg, #ffcc33, #ff6666);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
     height: 100vh;
     display: flex;
     justify-content: center;
@@ -16,19 +19,22 @@ body {
 
 .container {
     text-align: center;
-    background-color: rgba(255, 255, 255, 0.9);
+    background-color: rgba(255, 255, 255, 0.85);
     border-radius: 20px;
     padding: 30px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 15px rgba(255, 105, 180, 0.5);
     max-width: 800px;
     width: 90%;
+    backdrop-filter: blur(5px);
+    border: 2px solid rgba(255, 255, 255, 0.7);
 }
 
 h1 {
-    color: #ff4466;
+    color: #FF1493; /* Deep pink for princess theme */
     margin-bottom: 30px;
-    text-shadow: 3px 3px 0 rgba(0,0,0,0.1);
+    text-shadow: 3px 3px 0 rgba(255,192,203,0.5), 0 0 10px rgba(255,105,180,0.3);
     font-size: 2.5rem;
+    letter-spacing: 1px;
 }
 
 .wheel-container {
@@ -91,7 +97,7 @@ h1 {
 }
 
 #spin-button {
-    background-color: #44bb77;
+    background-color: #FF69B4; /* Hot pink for princess theme */
     color: white;
     border: none;
     border-radius: 50px;
@@ -100,13 +106,16 @@ h1 {
     cursor: pointer;
     font-family: 'Fredoka One', cursive;
     transition: all 0.3s;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2), 0 0 10px rgba(255, 105, 180, 0.5);
     margin-bottom: 30px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 #spin-button:hover {
-    background-color: #33aa66;
+    background-color: #FF1493; /* Deep pink on hover */
     transform: scale(1.05);
+    box-shadow: 0 7px 20px rgba(0, 0, 0, 0.3), 0 0 15px rgba(255, 105, 180, 0.7);
 }
 
 #spin-button:active {

@@ -98,8 +98,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // Define all 20 fun activities
+    // Define all 40 fun activities for kids 6-8
     const allActivities = [
+        // Original 20 activities
         { activity: 'Jump up and down 5 times!', audioId: 'jump' },
         { activity: 'Make a silly face!', audioId: 'face' },
         { activity: 'Pretend you\'re a superhero flying!', audioId: 'superhero' },
@@ -119,7 +120,29 @@ document.addEventListener('DOMContentLoaded', () => {
         { activity: 'Wiggle like a jellyfish!', audioId: 'face' },
         { activity: 'March in place for 10 seconds!', audioId: 'superhero' },
         { activity: 'Spin in a circle!', audioId: 'turn' },
-        { activity: 'Roar like a lion!', audioId: 'noise' }
+        { activity: 'Roar like a lion!', audioId: 'noise' },
+        
+        // 20 new activities for kids 6-8
+        { activity: 'Pretend to be a robot for 10 seconds!', audioId: 'robot' },
+        { activity: 'Make a funny face in slow motion!', audioId: 'face' },
+        { activity: 'Hop like a bunny 5 times!', audioId: 'hop' },
+        { activity: 'Pretend to swim like a fish!', audioId: 'animal' },
+        { activity: 'Balance on one foot for 5 seconds!', audioId: 'balance' },
+        { activity: 'Pretend you\'re a frog and jump 3 times!', audioId: 'jump' },
+        { activity: 'Flap your arms like a bird!', audioId: 'bird' },
+        { activity: 'Pretend to be a monkey!', audioId: 'animal' },
+        { activity: 'Move like you\'re walking on the moon!', audioId: 'moon' },
+        { activity: 'Pretend to be a growing flower!', audioId: 'grow' },
+        { activity: 'Act like you\'re a sleepy bear!', audioId: 'animal' },
+        { activity: 'Stomp like an elephant!', audioId: 'stomp' },
+        { activity: 'Crawl like a sneaky spy!', audioId: 'spy' },
+        { activity: 'Make circles with your arms!', audioId: 'circle' },
+        { activity: 'Pretend to be a snake slithering!', audioId: 'animal' },
+        { activity: 'Give yourself a high five!', audioId: 'clap' },
+        { activity: 'Pretend to ride a horse!', audioId: 'horse' },
+        { activity: 'Wave your arms like noodles!', audioId: 'noodle' },
+        { activity: 'Pretend to be a race car!', audioId: 'car' },
+        { activity: 'Do your silliest dance move!', audioId: 'dance' }
     ];
     
     // Color definitions
@@ -247,10 +270,64 @@ document.addEventListener('DOMContentLoaded', () => {
     // Create the properly distributed segments
     const segments = createBalancedSegments();
     
-    // Function to select random activity without duplicates
+    // Improved function to select random activities without duplicates
+    // Uses the Fisher-Yates (Knuth) shuffle algorithm for better randomization
     function getRandomActivities(count) {
-        const shuffled = [...allActivities].sort(() => 0.5 - Math.random());
-        return shuffled.slice(0, count);
+        // Create a copy of the activities array to avoid modifying the original
+        const activities = [...allActivities];
+        let currentIndex = activities.length;
+        let randomIndex;
+        
+        // Fisher-Yates shuffle algorithm
+        while (currentIndex !== 0) {
+            // Pick a remaining element
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            
+            // Swap it with the current element
+            [activities[currentIndex], activities[randomIndex]] = 
+            [activities[randomIndex], activities[currentIndex]];
+        }
+        
+        // Get activities to use for this session
+        // Add some session tracking to avoid repeating activities too soon
+        const sessionKey = 'lastUsedActivities';
+        let lastUsedActivities = [];
+        
+        try {
+            // Try to get previously used activities from session storage
+            const stored = sessionStorage.getItem(sessionKey);
+            if (stored) {
+                lastUsedActivities = JSON.parse(stored).map(a => a.activity);
+            }
+        } catch (e) {
+            console.log("Session storage not available:", e);
+        }
+        
+        // Filter out recently used activities where possible
+        let filteredActivities = activities;
+        if (lastUsedActivities.length > 0 && activities.length > count * 2) {
+            filteredActivities = activities.filter(a => !lastUsedActivities.includes(a.activity));
+            
+            // If we filtered too many, just use the shuffled list
+            if (filteredActivities.length < count) {
+                filteredActivities = activities;
+            }
+        }
+        
+        // Get the activities for this round
+        const selectedActivities = filteredActivities.slice(0, count);
+        
+        // Store these activities for next time
+        try {
+            sessionStorage.setItem(sessionKey, JSON.stringify(selectedActivities));
+        } catch (e) {
+            console.log("Unable to store in session storage:", e);
+        }
+        
+        console.log("Selected activities for this round:", selectedActivities.map(a => a.activity));
+        
+        return selectedActivities;
     }
     
     // Assign random activities to non-safe segments (6 segments need activities)
