@@ -1,4 +1,38 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Set up the princess pointer image
+    const princessPointer = document.querySelector('.princess-pointer');
+    
+    // List of free princess images we can use (in order of preference)
+    const princessImages = [
+        'https://openclipart.org/image/800px/303636', // Princess with wand from OpenClipart
+        'https://www.freeiconspng.com/uploads/princess-png-image-4.png', // Alternative princess
+        'https://cdn.pixabay.com/photo/2020/11/25/13/04/fairy-tale-5775953_1280.png' // Another alternative
+    ];
+    
+    // Try to load the princess image with fallbacks
+    function loadPrincessImage(index = 0) {
+        if (index >= princessImages.length) {
+            console.error("Could not load any princess images");
+            // Fallback to text if we can't load any images
+            princessPointer.innerHTML = '👸 <span style="font-size: 24px;">→</span>';
+            princessPointer.style.fontSize = '36px';
+            return;
+        }
+        
+        const img = new Image();
+        img.onload = () => {
+            princessPointer.style.backgroundImage = `url('${princessImages[index]}')`;
+        };
+        img.onerror = () => {
+            console.warn(`Failed to load princess image: ${princessImages[index]}`);
+            loadPrincessImage(index + 1);
+        };
+        img.src = princessImages[index];
+    }
+    
+    // Start loading the princess image
+    loadPrincessImage();
+    
     // Show audio instructions to users on mobile devices
     const audioPermissionMessage = document.getElementById('audio-permission');
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
@@ -270,62 +304,76 @@ document.addEventListener('DOMContentLoaded', () => {
     // Create the properly distributed segments
     const segments = createBalancedSegments();
     
-    // Improved function to select random activities without duplicates
-    // Uses the Fisher-Yates (Knuth) shuffle algorithm for better randomization
+    // Round-robin function to select activities in sequence without repeating until all are used
+    // This ensures all activities are presented in turn before repeating any
     function getRandomActivities(count) {
-        // Create a copy of the activities array to avoid modifying the original
-        const activities = [...allActivities];
-        let currentIndex = activities.length;
-        let randomIndex;
+        // Session storage keys
+        const usedActivitiesKey = 'usedActivities';
+        const activityIndexKey = 'activityIndex';
         
-        // Fisher-Yates shuffle algorithm
-        while (currentIndex !== 0) {
-            // Pick a remaining element
-            randomIndex = Math.floor(Math.random() * currentIndex);
-            currentIndex--;
-            
-            // Swap it with the current element
-            [activities[currentIndex], activities[randomIndex]] = 
-            [activities[randomIndex], activities[currentIndex]];
-        }
-        
-        // Get activities to use for this session
-        // Add some session tracking to avoid repeating activities too soon
-        const sessionKey = 'lastUsedActivities';
-        let lastUsedActivities = [];
+        // Get or initialize our tracking arrays and indices
+        let usedActivities = [];
+        let activityIndex = 0;
         
         try {
-            // Try to get previously used activities from session storage
-            const stored = sessionStorage.getItem(sessionKey);
-            if (stored) {
-                lastUsedActivities = JSON.parse(stored).map(a => a.activity);
+            // Get previously used activities from session storage
+            const usedString = sessionStorage.getItem(usedActivitiesKey);
+            const indexString = sessionStorage.getItem(activityIndexKey);
+            
+            if (usedString) {
+                usedActivities = JSON.parse(usedString);
+            }
+            
+            if (indexString) {
+                activityIndex = parseInt(indexString, 10);
             }
         } catch (e) {
             console.log("Session storage not available:", e);
         }
         
-        // Filter out recently used activities where possible
-        let filteredActivities = activities;
-        if (lastUsedActivities.length > 0 && activities.length > count * 2) {
-            filteredActivities = activities.filter(a => !lastUsedActivities.includes(a.activity));
+        // If we've used all activities or this is the first run, reset and shuffle
+        if (usedActivities.length === 0 || usedActivities.length >= allActivities.length) {
+            // Start fresh with a newly shuffled list
+            usedActivities = [];
             
-            // If we filtered too many, just use the shuffled list
-            if (filteredActivities.length < count) {
-                filteredActivities = activities;
+            // Create a shuffled copy of all activities
+            const shuffled = [...allActivities];
+            let currentIndex = shuffled.length;
+            let randomIndex;
+            
+            // Fisher-Yates shuffle algorithm
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [shuffled[currentIndex], shuffled[randomIndex]] = 
+                [shuffled[randomIndex], shuffled[currentIndex]];
             }
+            
+            // Store the shuffled list
+            usedActivities = shuffled;
+            activityIndex = 0;
+            
+            console.log("Round-robin: Shuffled all activities and starting fresh");
         }
         
-        // Get the activities for this round
-        const selectedActivities = filteredActivities.slice(0, count);
+        // Get the next batch of activities in sequence
+        const selectedActivities = [];
         
-        // Store these activities for next time
+        for (let i = 0; i < count; i++) {
+            // Get activity and increment index with wraparound
+            selectedActivities.push(usedActivities[activityIndex]);
+            activityIndex = (activityIndex + 1) % usedActivities.length;
+        }
+        
+        // Update session storage
         try {
-            sessionStorage.setItem(sessionKey, JSON.stringify(selectedActivities));
+            sessionStorage.setItem(usedActivitiesKey, JSON.stringify(usedActivities));
+            sessionStorage.setItem(activityIndexKey, activityIndex.toString());
         } catch (e) {
             console.log("Unable to store in session storage:", e);
         }
         
-        console.log("Selected activities for this round:", selectedActivities.map(a => a.activity));
+        console.log("Round-robin: Selected activities for this round:", selectedActivities.map(a => a.activity));
         
         return selectedActivities;
     }

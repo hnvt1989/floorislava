@@ -96,6 +96,28 @@ h1 {
     z-index: 10;
 }
 
+.princess-pointer {
+    position: absolute;
+    right: -120px; /* Position to the right of the wheel */
+    top: 50%;
+    transform: translateY(-50%);
+    width: 180px;
+    height: 200px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    z-index: 10;
+    filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.3));
+    animation: floating 3s ease-in-out infinite;
+    pointer-events: none; /* Make sure it doesn't interfere with wheel interaction */
+}
+
+@keyframes floating {
+    0% { transform: translateY(-50%) translateX(0); }
+    50% { transform: translateY(-50%) translateX(-5px) rotate(-2deg); }
+    100% { transform: translateY(-50%) translateX(0); }
+}
+
 #spin-button {
     background-color: #FF69B4; /* Hot pink for princess theme */
     color: white;
